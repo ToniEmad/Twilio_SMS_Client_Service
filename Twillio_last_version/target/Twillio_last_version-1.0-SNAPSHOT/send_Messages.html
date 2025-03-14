@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSMS - Send Message</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/user.css">
+</head>
+<body>
+    <div class="dashboard">
+        <div id="sidebar"></div>
+        <main class="main-content">
+            <div class="header">
+                <h1>Send New Message</h1>
+            </div>
+            <div class="message-form">
+                <form id="smsForm" action="MessageHistoryServlet">
+                    <div class="form-group">
+                        <label>From (Phone Number)</label>
+                        <input type="tel" id="fromNumber" class="form-control" placeholder="Enter your phone number" required>
+                    </div>
+                    <div class="form-group">
+                        <label>To (Phone Number)</label>
+                        <input type="tel" id="toNumber" class="form-control" placeholder="Enter recipient phone number" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea id="messageBody" class="form-control message-area" placeholder="Type your message here..." required></textarea>
+                        <div class="character-count">
+                            <span id="charCount">0</span>/160 characters
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+
+    fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+            })
+            .catch(error => console.error('An error occurred while loading the sidebar:', error));
+    
+        // Character counter
+        document.getElementById("messageBody").addEventListener("input", function() {
+            let count = this.value.length;
+            document.getElementById("charCount").textContent = count;
+        });
+
+        // Handle form submission
+        document.getElementById("smsForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            
+            let from = document.getElementById("fromNumber").value;
+            let to = document.getElementById("toNumber").value;
+            let message = document.getElementById("messageBody").value;
+            
+            fetch("SendSMSServlet", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&message=${encodeURIComponent(message)}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert("Message sent successfully!");
+                document.getElementById("smsForm").reset();
+                document.getElementById("charCount").textContent = "0";
+                
+                // Refresh message history
+                fetch("MessageHistoryServlet")
+                    .then(response => response.json())
+                    .then(messages => {
+                        let historyContainer = document.getElementById("messages");
+                        historyContainer.innerHTML = "";
+                        messages.forEach(message => {
+                            let messageItem = `<div class='message-item'>
+                                <div class='message-info'>
+                                    <div class='recipient'>To: ${message.to_msisdn}</div>
+                                    <div class='timestamp'>${message.date}</div>
+                                </div>
+                                <div class='message-content'>
+                                    <p>${message.body}</p>
+                                </div>
+                                <div class='message-status'>
+                                    <span class='status-badge'>${message.status}</span>
+                                </div>
+                            </div>`;
+                            historyContainer.innerHTML += messageItem;
+                        });
+                    });
+            })
+            .catch(error => console.error("Error sending message:", error));
+        });
+    </script>
+</body>
+</html>

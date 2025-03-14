@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSMS - User Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/user.css">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
+
+</head>
+<body>
+    <div class="dashboard">
+        <div id="sidebar"></div>
+        <main class="main-content">
+            <div class="header">
+                <h1>My Profile</h1>
+                <button class="btn btn-primary" onclick="document.getElementById('profileForm').submit();">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+
+            <div class="profile-form">
+                    <form id="profileForm" action="UserProfileServlet" method="post">
+                    <div class="form-grid">
+                        <!-- Personal Information -->
+                        <div class="form-section">
+                            <h2 class="section-title">Personal Information</h2>
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" class="form-control" name="username" value="{{username}}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Birthday</label>
+                                <input type="date" class="form-control" name="birthday" value="{{birthday}}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number (MSISDN)</label>
+                                <input type="tel" class="form-control" name="msisdn" value="{{msisdn}}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-control" name="email" value="{{email}}" required>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="form-section">
+                            <h2 class="section-title">Additional Information</h2>
+                            <div class="form-group">
+                                <label>Job Title</label>
+                                <input type="text" class="form-control" name="job" value="{{job}}">
+                            </div>
+                            <div class="form-group">
+                                <label>Address</label>
+                                <textarea class="form-control" name="address">{{address}}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Twilio Configuration -->
+                        <div class="form-section">
+                            <h2 class="section-title">Twilio Configuration</h2>
+                            <div class="form-group">
+                                <label>Twilio Account SID</label>
+                                <input type="text" class="form-control" name="twillio_sid" value="{{twillio_sid}}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Twilio Auth Token</label>
+                                <input type="password" class="form-control" name="twillio_token" value="{{twillio_token}}" required>
+                            </div>
+                        </div>
+                        <!-- Security Section -->
+           
+
+                    </div>
+                </form>
+<!-- Password Update Form -->
+<form id="passwordForm" action="UpdatePasswordServlet" method="post">
+    <div class="form-section">
+        <h2 class="section-title">Security</h2>
+
+        <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" class="form-control" name="current_password" placeholder="Enter current password" required>
+        </div>
+
+        <div class="form-group">
+            <label>New Password</label>
+            <input type="password" class="form-control" name="new_password" placeholder="Enter new password" required>
+        </div>
+
+        <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" class="form-control" name="confirm_password" placeholder="Confirm new password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Password</button>
+    </div>
+</form>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Load sidebar dynamically
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+            })
+            .catch(error => console.error('An error occurred while loading the sidebar:', error));
+    
+    
+    
+       // حفظ البيانات في localStorage
+    document.getElementById("profileForm").addEventListener("input", function () {
+        let formData = new FormData(this);
+        let obj = {};
+        formData.forEach((value, key) => obj[key] = value);
+        localStorage.setItem("profileData", JSON.stringify(obj));
+    });
+
+    // استعادة البيانات عند إعادة تحميل الصفحة
+    document.addEventListener("DOMContentLoaded", function () {
+        let savedData = localStorage.getItem("profileData");
+        if (savedData) {
+            savedData = JSON.parse(savedData);
+            Object.keys(savedData).forEach(key => {
+                let input = document.querySelector(`[name="${key}"]`);
+                if (input) input.value = savedData[key];
+            });
+        }
+    });
+    
+    //alert علشان لما يغير الباسورد 
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get("status");
+
+        if (status) {
+            let message = "";
+            let type = "error"; 
+
+            if (status === "success") {
+                message = "Password updated successfully!";
+                type = "success";
+            } else if (status === "wrong_password") {
+                message = "Current password is incorrect. Please try again.";
+            } else if (status === "password_mismatch") {
+                message = "New passwords do not match. Please re-enter.";
+            } else if (status === "user_not_found") {
+                message = "User not found!";
+            } else if (status === "error") {
+                message = "Error updating password. Please try again.";
+            } else if (status === "db_error") {
+                message = "Database error. Contact support.";
+            }
+
+            alert(message);
+
+            // إزالة `status` من الرابط بعد عرض التنبيه
+            history.replaceState(null, "", window.location.pathname);
+        }
+    });
+//session managment 
+    
+    function fetchSessionData() {
+        fetch('GetSessionDataServlet') // استدعاء السيرفلت لاسترجاع البيانات
+            .then(response => response.json())
+            .then(data => {
+                if (data.username) {
+                    sessionStorage.setItem("username", data.username);
+                    sessionStorage.setItem("email", data.email);
+                    sessionStorage.setItem("msisdn", data.msisdn);
+                    sessionStorage.setItem("role", data.role);
+
+                    document.getElementById("username").textContent = data.username;
+                    document.getElementById("email").textContent = data.email;
+                    document.getElementById("msisdn").textContent = data.msisdn;
+                } else {
+                    window.location.href = "login.html"; // إعادة التوجيه لو لم يتم تسجيل الدخول
+                }
+            })
+            .catch(error => console.error("Error fetching session data:", error));
+    }
+
+    document.addEventListener("DOMContentLoaded", fetchSessionData);
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Customers</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body>
+    <div class="dashboard">
+        <div id="sidebar_admin"></div>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Manage Customers</h1>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>Phone</th>
+                            <th>Messages</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Example customer data -->
+                        <tr>
+                            <td>John Smith</td>
+                            <td>01155555555</td>
+                            <td>245</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="editCustomer(this)">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteRow(this)">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Sarah Wilson</td>
+                            <td>01155555555</td>
+                            <td>189</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="editCustomer(this)">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteRow(this)">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Add more customer rows as needed -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function editCustomer(button) {
+            const row = button.parentNode.parentNode;
+            const name = row.cells[0].textContent;
+            const phone = row.cells[1].textContent;
+            const messages = row.cells[2].textContent;
+
+            // Redirect to edit_customer.html with customer data as URL parameters
+            window.location.href = `edit_customer.html?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&messages=${encodeURIComponent(messages)}`;
+        }
+
+        function deleteRow(button) {
+            const row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+    
+        
+       document.addEventListener("DOMContentLoaded", function () {
+    fetch("sidebar_admin.html")
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("sidebar_admin").innerHTML = data;
+
+            // Wait for the sidebar to be added to the DOM
+            highlightActiveLink();
+        })
+        .catch(error => console.error("An error occurred while loading the sidebar:", error));
+});
+
+// Function to highlight the active menu item
+function highlightActiveLink() {
+    let currentPage = window.location.pathname.split("/").pop(); // Get current page filename
+    let links = document.querySelectorAll("#sidebar_admin .nav-item");
+
+    links.forEach(link => {
+        if (link.getAttribute("href") === currentPage) {
+            link.classList.add("active");
+        }
+    });}
+    </script>
+</body>
+</html> 
