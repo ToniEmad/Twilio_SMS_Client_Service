@@ -41,9 +41,9 @@ The **Twilio SMS Client** is a web-based application that allows users to send a
 Before installing and running the application, ensure you have the following installed:
 
 - **Operating System**: CentOS 9
-- **Java Development Kit (JDK)**: JDK 8
+- **Java Development Kit (JDK)**: JDK 23
 - **Java EE Servlet Container**: Apache Tomcat
-- **Database**: MySQL
+- **Database**: MySQL and postgres
 - **Development Environment**: NetBeans 24
 - **Twilio Account** with API credentials (SID & Auth Token)
 
@@ -54,9 +54,9 @@ Before installing and running the application, ensure you have the following ins
 ### **Step 1: Install Required Packages**
 Before setting up the project, ensure the required dependencies are installed on CentOS 9.
 
-#### **1.1 Install Java (JDK 8)**
+#### **1.1 Install Java (JDK 23)**
 ```bash
-sudo dnf install java-1.8.0-openjdk -y
+sudo dnf install jdk-23_linux-x64_bin.rpm
 ```
 Verify the installation:
 ```bash
@@ -88,8 +88,8 @@ sudo mysql_secure_installation
 ### **Step 2: Clone the Repository**
 Download the project from your Git repository:
 ```bash
-git clone https://github.com/Maaahmwd19/ITI_Twilio_SMS_Client_Service.git
-cd TwilioSMSClient
+git https://github.com/ToniEmad/Twilio_SMS_Client_Service.git
+cd TSMS
 ```
 
 ---
@@ -101,7 +101,7 @@ cd TwilioSMSClient
    ```
 2. **Create the database**:
    ```sql
-   CREATE DATABASE twilio_sms_client;
+   CREATE DATABASE twilio;
    ```
 3. **Create a database user**:
    ```sql
@@ -113,41 +113,46 @@ cd TwilioSMSClient
    ```sql
    USE twilio_sms_client;
 
-   CREATE TABLE users (
-       id INT AUTO_INCREMENT PRIMARY KEY,
-       username VARCHAR(50) UNIQUE NOT NULL,
-       password VARCHAR(255) NOT NULL,
-       role ENUM('Customer', 'Administrator') NOT NULL,
-       name VARCHAR(100),
-       birthday DATE,
-       phone VARCHAR(15),
-       job VARCHAR(100),
-       email VARCHAR(100),
-       address TEXT,
-       twilio_sid VARCHAR(50),
-       twilio_token VARCHAR(50),
-       sender_id VARCHAR(20)
+   CREATE TABLE customer (
+    msisdn VARCHAR(20) ,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    birthday DATE,
+    password TEXT NOT NULL,
+    job VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    address TEXT,
+    twillio_sid TEXT,
+    twillio_token TEXT,
+    sms_status ENUM('active', 'inactive'),
+    sender_id VARCHAR(20) PRIMARY KEY,
+    sms_validate TINYINT(1) DEFAULT 0,
+    acc_id INT,
+    FOREIGN KEY (acc_id) REFERENCES account(acc_id) ON DELETE SET NULL
    );
 
-   CREATE TABLE sms_history (
-       id INT AUTO_INCREMENT PRIMARY KEY,
-       user_id INT,
-       from_number VARCHAR(20),
-       to_number VARCHAR(20),
-       body TEXT,
-       date_sent TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+   CREATE TABLE account (
+    acc_id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role ENUM('admin', 'user') NOT NULL
    );
 
-   CREATE TABLE inbound_sms (
-       id INT AUTO_INCREMENT PRIMARY KEY,
-       user_id INT,
-       from_number VARCHAR(20),
-       to_number VARCHAR(20),
-       body TEXT,
-       received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+   
+   CREATE TABLE sms (
+    s_id INT PRIMARY KEY AUTO_INCREMENT,
+    from_msisdn VARCHAR(20) NOT NULL,
+    to_msisdn VARCHAR(20) NOT NULL,
+    body TEXT NOT NULL,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('sent', 'failed', 'pending') NOT NULL,
+    acc_id INT,
+    FOREIGN KEY (from_msisdn) REFERENCES customer(sender_id) ON DELETE CASCADE,
+    FOREIGN KEY (acc_id) REFERENCES account(acc_id) ON DELETE SET NULL
    );
+
+
+   
    ```
 
 ---
@@ -155,7 +160,7 @@ cd TwilioSMSClient
 ### **Step 4: Configure the Application**
 Edit the **database configuration** file in `config.properties`:
 ```
-db.url=jdbc:mysql://localhost:3306/twilio_sms_client
+db.url=jdbc:mysql://localhost:3306/TSMS
 db.user=twilio_user
 db.password=password
 ```
@@ -171,7 +176,7 @@ twilio.sender_id=your_twilio_sender_id
 ### **Step 5: Build and Deploy the Application**
 #### **5.1 Compile the project**
 1. Open **NetBeans 24**.
-2. Load the **Twilio SMS Client** project.
+2. Load the **TSMS** project.
 3. Configure the **Java EE Server** to use **Tomcat**.
 4. Build the project using:
    ```
@@ -193,7 +198,7 @@ sudo systemctl restart tomcat
 ### **Step 6: Access the Application**
 Once deployed, open your browser and navigate to:
 ```
-http://localhost:8080/TwilioSMSClient
+http://localhost:8080/TSMS
 ```
 - **Customer Login**: Use the credentials created during sign-up.
 - **Administrator Login**: Use admin credentials stored in the database.
